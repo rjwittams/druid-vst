@@ -1,7 +1,11 @@
 #[macro_use]
 extern crate vst;
 
-mod ladder_filter;
+pub mod ladder_filter;
+mod dial;
+mod host_resize;
 
 plugin_main!(ladder_filter::LadderFilter);
 
+pub use host_resize::HostResizeDragArea;
+pub use dial::Dial;
