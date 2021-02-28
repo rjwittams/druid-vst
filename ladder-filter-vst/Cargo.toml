@@ -1,0 +1,16 @@
+[package]
+name = "ladder-filter-vst"
+version = "0.1.0"
+authors = ["Robert Wittams <robert@wittams.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+carnyx = {path= "../carnyx"}
+carnyx-vst = {path = "../carnyx-vst"}
+ladder-filter = {path = "../ladder-filter"}
+vst = "0.2.1"

@@ -1,4 +1,4 @@
-// Copyright 2019 The Druid Authors.
+// Copyright 2021 The Druid Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 //! A dial widget.
 
-use druid::kurbo::{Shape, CircleSegment};
+use druid::kurbo::{CircleSegment, Shape};
 use druid::widget::prelude::*;
 use druid::{theme, LinearGradient, Point, UnitPoint};
 use std::f64::consts::PI;
@@ -30,7 +30,7 @@ pub struct Dial {
     min: f64,
     max: f64,
     mouse_last: Option<Point>,
-    hovered: bool
+    hovered: bool,
 }
 
 impl Default for Dial {
@@ -46,7 +46,7 @@ impl Dial {
             min: 0.,
             max: 1.,
             mouse_last: None,
-            hovered: false
+            hovered: false,
         }
     }
 
@@ -77,7 +77,13 @@ impl Dial {
         //let end_angle = 2.25 * PI;
 
         let outer = inset_rect.height() / 2.;
-        let seg = CircleSegment::new(center, outer, outer * 0.5, start_angle, 2. * PI * 0.75 * clamped);
+        let seg = CircleSegment::new(
+            center,
+            outer,
+            outer * 0.5,
+            start_angle,
+            2. * PI * 0.75 * clamped,
+        );
         seg
     }
 }
@@ -123,13 +129,18 @@ impl Widget<f64> for Dial {
     fn lifecycle(&mut self, _ctx: &mut LifeCycleCtx, _event: &LifeCycle, _data: &f64, _env: &Env) {}
 
     fn update(&mut self, ctx: &mut UpdateCtx, _old_data: &f64, _data: &f64, _env: &Env) {
-
         ctx.request_paint();
     }
 
-    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &f64, _env: &Env) -> Size {
+    fn layout(
+        &mut self,
+        _ctx: &mut LayoutCtx,
+        bc: &BoxConstraints,
+        _data: &f64,
+        env: &Env,
+    ) -> Size {
         bc.debug_check("Dial");
-        bc.constrain_aspect_ratio(1.0, f64::INFINITY)
+        bc.constrain_aspect_ratio(1.0, env.get(theme::WIDE_WIDGET_WIDTH)/ 2.)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &f64, env: &Env) {
@@ -138,7 +149,10 @@ impl Widget<f64> for Dial {
         let is_active = ctx.is_active();
         let is_hovered = self.hovered;
         let (start, end) = (UnitPoint::TOP, UnitPoint::BOTTOM);
-        let stops = (env.get(theme::FOREGROUND_LIGHT), env.get(theme::FOREGROUND_DARK));
+        let stops = (
+            env.get(theme::FOREGROUND_LIGHT),
+            env.get(theme::FOREGROUND_DARK),
+        );
         let stops = if is_active { (stops.1, stops.0) } else { stops };
         let gradient = LinearGradient::new(start, end, stops);
 
@@ -154,5 +168,3 @@ impl Widget<f64> for Dial {
 
     fn post_render(&mut self) {}
 }
-
-

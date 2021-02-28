@@ -1,0 +1,19 @@
+[package]
+name = "carnyx-vst"
+version = "0.1.0"
+authors = ["Robert Wittams <robert@wittams.com>"]
+edition = "2018"
+
+#[lib]
+#crate-type = ["cdylib"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+carnyx = {path="../carnyx"}
+vst = "0.2.1"
+druid = {git="https://github.com/rjwittams/druid/", branch="rjw-vst", features=["embed"]}
+
+tracing = { version = "0.1.22", features = ["log"] }
+raw-window-handle = { version = "0.3.3", default_features = false }
+
