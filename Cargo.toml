@@ -17,4 +17,4 @@ default-members = [
 druid = { path= "../druid/druid" }
 
 [patch.crates-io]
-vst = {path="../vst-rs/"}
+#vst = {path="../vst-rs/"}

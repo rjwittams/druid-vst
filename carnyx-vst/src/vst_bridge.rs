@@ -5,7 +5,7 @@ use vst::host::Host;
 use std::ffi::{CString, c_void};
 use vst::editor::Editor;
 use raw_window_handle::RawWindowHandle;
-use raw_window_handle::macos::MacOSHandle;
+
 
 pub struct VstParams<DP: CarnyxModel, L: CarnyxModelListener<DP> + Sync>{
     params: Vec<Box<dyn CarnyxParam<DP>>>,
@@ -107,11 +107,21 @@ impl<C: CarnyxEditor> VstCarnyxEditor<C> {
     }
 }
 
+#[cfg(target_os = "macos")]
 fn to_raw_window_handle(parent: *mut c_void) -> RawWindowHandle {
-    #[cfg(target_os = "macos")]
-        RawWindowHandle::MacOS(MacOSHandle {
+    use raw_window_handle::macos::MacOSHandle;
+    RawWindowHandle::MacOS(MacOSHandle {
         ns_view: parent as *mut _,
         ..MacOSHandle::empty()
+    })
+}
+
+#[cfg(target_os = "windows")]
+fn to_raw_window_handle(parent: *mut c_void) -> RawWindowHandle {
+    use raw_window_handle::windows::WindowsHandle;
+    RawWindowHandle::Windows(WindowsHandle {
+        hwnd: parent as *mut _,
+        ..WindowsHandle::empty()
     })
 }
 

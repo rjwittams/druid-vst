@@ -84,7 +84,9 @@ impl<Model: CarnyxModel> CarnyxEditor for DruidEditor<Model> where Model::Snap :
             let make_editor = &self.make_editor;
             let snap_edit = make_editor();
             let wrapped = wrap_editor_widget(self.host.clone(), Arc::clone(&self.model), snap_edit);
-            let window_desc = WindowDesc::new(wrapped);
+            let window_desc = WindowDesc::new(wrapped)
+                .show_titlebar(false)
+                .transparent(true);
             let state = EditorState {
                 snap: self.model.snap(),
             };
