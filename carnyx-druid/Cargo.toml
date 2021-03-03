@@ -13,6 +13,7 @@ edition = "2018"
 carnyx = {path="../carnyx"}
 vst = "0.2.1"
 druid = {git="https://github.com/rjwittams/druid/", branch="rjw-vst", features=["embed"]}
+druid-shell = {path="../../druid/druid-shell"}
 
 tracing = { version = "0.1.22", features = ["log"] }
 raw-window-handle = { version = "0.3.3", default_features = false }

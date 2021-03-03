@@ -4,13 +4,16 @@ use std::sync::{Mutex, Arc};
 
 pub trait CarnyxHost: Sync + Send{
     fn update_host_display(&self);
-    fn resize_editor_window(&self, width: usize, height: usize);
+}
+
+pub trait CarnyxWindowResizer {
+    fn resize_editor_window(&self, width: usize, height: usize)->bool;
 }
 
 pub trait CarnyxEditor{
     fn initial_size(&self)->(usize, usize);
     fn initial_position(&self)->(isize, isize);
-    fn open(&mut self, handle: Option<RawWindowHandle>)->bool;
+    fn open(&mut self, handle: Option<RawWindowHandle>, window_resizer: Box<dyn CarnyxWindowResizer>)->bool;
     fn is_open(&self)->bool;
 }
 

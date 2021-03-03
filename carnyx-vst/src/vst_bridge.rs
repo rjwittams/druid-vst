@@ -1,4 +1,4 @@
-use carnyx::{CarnyxModel, CarnyxParam, CarnyxHost, CarnyxEditor, CarnyxModelListener};
+use carnyx::{CarnyxModel, CarnyxParam, CarnyxHost, CarnyxEditor, CarnyxModelListener, CarnyxWindowResizer};
 use vst::plugin::{PluginParameters, HostCallback};
 use std::sync::Arc;
 use vst::host::Host;
@@ -56,16 +56,34 @@ impl VstCarnyxHost {
     pub fn new(host_callback: HostCallback) -> Self {
         VstCarnyxHost { inner: host_callback }
     }
+
+    pub fn resizer(&self)->Box<dyn CarnyxWindowResizer>{
+        Box::new(VstCarnyxResizer{
+            inner: self.inner.clone()
+        })
+    }
 }
 
-impl CarnyxHost for VstCarnyxHost{
+impl CarnyxHost for VstCarnyxHost {
     fn update_host_display(&self) {
         if self.inner.raw_callback().is_some() {
             self.inner.update_display()
         }
     }
+}
 
-    fn resize_editor_window(&self, width: usize, height: usize) {
+pub struct VstCarnyxResizer {
+    inner: HostCallback
+}
+
+impl VstCarnyxResizer {
+    pub fn new(inner: HostCallback) -> Self {
+        VstCarnyxResizer { inner }
+    }
+}
+
+impl CarnyxWindowResizer for VstCarnyxResizer{
+    fn resize_editor_window(&self, width: usize, height: usize)->bool {
         let (_, vendor, _) = self.inner.get_info();
         let is_ableton = "Ableton".eq(&vendor);
 
@@ -91,19 +109,21 @@ impl CarnyxHost for VstCarnyxHost{
                     std::ptr::null_mut(),
                     0.,
                 );
-                eprintln!("Result of SizeWindow {:?}", res);
+                return res == 1
             }
         }
+        false
     }
 }
 
 pub struct VstCarnyxEditor<C: CarnyxEditor>{
-    inner: C
+    inner: C,
+    host_callback: HostCallback
 }
 
 impl<C: CarnyxEditor> VstCarnyxEditor<C> {
-    pub fn new(inner: C) -> Self {
-        VstCarnyxEditor { inner }
+    pub fn new(inner: C, host_callback: HostCallback) -> Self {
+        VstCarnyxEditor { inner, host_callback }
     }
 }
 
@@ -137,7 +157,7 @@ impl <C: CarnyxEditor> Editor for VstCarnyxEditor<C>{
     }
 
     fn open(&mut self, parent: *mut c_void) -> bool {
-        self.inner.open(Some(to_raw_window_handle(parent)))
+        self.inner.open(Some(to_raw_window_handle(parent)), Box::new(VstCarnyxResizer::new( self.host_callback )))
     }
 
     fn is_open(&mut self) -> bool {

@@ -17,6 +17,7 @@ impl Default for LadderFilterVST {
 
 pub struct LadderFilterVST {
     processor: LadderProcessor,
+    host_callback: HostCallback
 }
 
 impl Plugin for LadderFilterVST {
@@ -37,7 +38,8 @@ impl Plugin for LadderFilterVST {
             Self: Sized + Default,
     {
         LadderFilterVST {
-            processor: LadderProcessor::new(Arc::new(VstCarnyxHost::new(host)))
+            processor: LadderProcessor::new(Arc::new(VstCarnyxHost::new(host))),
+            host_callback: host
         }
     }
 
@@ -59,7 +61,7 @@ impl Plugin for LadderFilterVST {
 
     fn get_editor(&mut self) -> Option<Box<dyn Editor>> {
         let ce = self.processor.editor();
-        Some(Box::new(VstCarnyxEditor::new(ce)) as Box<dyn Editor>)
+        Some(Box::new(VstCarnyxEditor::new(ce, self.host_callback)) as Box<dyn Editor>)
     }
 }
 

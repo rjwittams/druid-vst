@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
-use druid::{AppLauncher, Data, EmbeddedApp, Env, Event, EventCtx, Lens, Selector, Widget, WidgetExt, WindowDesc, Target, ExtEventSink};
+use druid::{AppLauncher, Data, EmbeddedApp, Env, Event, EventCtx, Lens, Selector, Widget, WidgetExt, WindowDesc, Target, ExtEventSink, Size};
 use druid::lens::Unit;
-use druid::widget::{Controller, Flex};
+use druid::widget::{Controller, Flex, Label};
 
 use raw_window_handle::RawWindowHandle;
 use crate::HostResizeDragArea;
 use carnyx::carnyx::{CarnyxModel, CarnyxModelListener, CarnyxHost, CarnyxEditor, SettableListener};
 use std::marker::PhantomData;
+use carnyx::CarnyxWindowResizer;
 
 pub struct DruidEditor<Model: CarnyxModel> {
     make_editor: Box<dyn Fn() -> Box<dyn Widget<EditorState<Model>>>>,
@@ -36,6 +37,7 @@ impl<Model: CarnyxModel> DruidEditor<Model> where Model::Snap : Data{
 
 fn wrap_editor_widget<Model: CarnyxModel>(
     host: Arc<dyn CarnyxHost>,
+    window_resizer: Box<dyn CarnyxWindowResizer>,
     params: Arc<Model>,
     child: impl Widget<EditorState<Model>> + 'static) -> impl Widget<EditorState<Model>> where Model::Snap : Data {
 
@@ -47,7 +49,7 @@ fn wrap_editor_widget<Model: CarnyxModel>(
         .with_child(
             Flex::row()
                 .with_flex_spacer(1.0)
-                .with_child(HostResizeDragArea::new(host.clone()).lens(Unit)),
+                .with_child(HostResizeDragArea::new(window_resizer).lens(Unit)),
         ).controller(EditorController::new(host, params))
 }
 
@@ -79,21 +81,22 @@ impl<Model: CarnyxModel> CarnyxEditor for DruidEditor<Model> where Model::Snap :
         (100, 100)
     }
 
-    fn open(&mut self, handle: Option<RawWindowHandle>) -> bool {
+    fn open(&mut self, handle: Option<RawWindowHandle>, window_resizer: Box<dyn CarnyxWindowResizer>) -> bool {
         if let Some(raw) = handle {
             let make_editor = &self.make_editor;
             let snap_edit = make_editor();
-            let wrapped = wrap_editor_widget(self.host.clone(), Arc::clone(&self.model), snap_edit);
+            let wrapped = wrap_editor_widget(self.host.clone(), window_resizer, Arc::clone(&self.model), snap_edit);
+            let (w, h) = self.initial_size();
             let window_desc = WindowDesc::new(wrapped)
+                .window_size(Size::new(w as f64, h as f64))
                 .show_titlebar(false)
-                .transparent(true);
+                .resizable(false);
             let state = EditorState {
                 snap: self.model.snap(),
             };
 
             self.app = AppLauncher::with_window(window_desc)
-                .launch_embedded(state, raw)
-                .ok();
+                .launch_embedded(state, raw).ok();
 
             if let Some(app) = &self.app {
                 let sink = app.sink.clone();
@@ -161,7 +164,6 @@ Controller<EditorState<Model>, W> for EditorController<Model> where Model::Snap 
     ) {
         match event {
             Event::Command(cmd) if cmd.is(MODEL_CHANGED) => {
-                eprintln!("Got params changed");
                 data.snap = self.params.snap();
             }
             _ => {
